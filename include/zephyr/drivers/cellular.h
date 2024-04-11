@@ -53,6 +53,16 @@ struct cellular_network {
 	uint16_t size;
 };
 
+/** Cellular network structure */
+struct cellular_info {
+	char provider[17];
+	bool has_provider;
+	char lac[7];
+	bool has_lac;
+	char ci[9];
+	bool has_ci;
+};
+
 /** Cellular signal type */
 enum cellular_signal_type {
 	CELLULAR_SIGNAL_RSSI,
@@ -95,12 +105,17 @@ typedef int (*cellular_api_get_modem_info)(const struct device *dev,
 					   const enum cellular_modem_info_type type,
 					   char *info, size_t size);
 
+/** API for getting modem information */
+typedef int (*cellular_api_get_cell_info)(const struct device *dev,
+					  struct cellular_info *cell_info);
+
 /** Cellular driver API */
 __subsystem struct cellular_driver_api {
 	cellular_api_configure_networks configure_networks;
 	cellular_api_get_supported_networks get_supported_networks;
 	cellular_api_get_signal get_signal;
 	cellular_api_get_modem_info get_modem_info;
+	cellular_api_get_cell_info get_cell_info;
 };
 
 /**
@@ -208,6 +223,18 @@ static inline int cellular_get_modem_info(const struct device *dev,
 	}
 
 	return api->get_modem_info(dev, type, info, size);
+}
+
+static inline int cellular_get_cell_info(const struct device *dev,
+					 struct cellular_info *cell_info)
+{
+	const struct cellular_driver_api *api = (const struct cellular_driver_api *)dev->api;
+
+	if (api->get_cell_info == NULL) {
+		return -ENOSYS;
+	}
+
+	return api->get_cell_info(dev, cell_info);
 }
 
 #ifdef __cplusplus

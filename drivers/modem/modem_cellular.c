@@ -23,6 +23,9 @@ LOG_MODULE_REGISTER(modem_cellular, CONFIG_MODEM_LOG_LEVEL);
 #include <string.h>
 #include <stdlib.h>
 
+/* FIXME: don't use globals for this */
+struct cellular_info stored_cell_info;
+
 #define MODEM_CELLULAR_PERIODIC_SCRIPT_TIMEOUT \
 	K_MSEC(CONFIG_MODEM_CELLULAR_PERIODIC_SCRIPT_MS)
 
@@ -352,6 +355,33 @@ static void modem_cellular_chat_on_csq(struct modem_chat *chat, char **argv, uin
 	data->rssi = (uint8_t)atoi(argv[1]);
 }
 
+static void modem_cellular_chat_on_cops(struct modem_chat *chat, char **argv, uint16_t argc,
+				        void *user_data)
+{
+	LOG_WRN("on_cops argc: %d", argc);
+	if (argc == 5)
+	{
+		LOG_WRN("Operator: %s", argv[3]);
+		strncpy(stored_cell_info.provider, argv[3], strlen(argv[3]));
+		stored_cell_info.has_provider = true;
+	}
+}
+
+static void modem_cellular_chat_on_creg(struct modem_chat *chat, char **argv, uint16_t argc,
+				        void *user_data)
+{
+	LOG_WRN("on_creg argc: %d", argc);
+	if (argc == 6)
+	{
+		LOG_WRN("Location area code (lac): %s", argv[3]);
+		strncpy(stored_cell_info.lac, argv[3], strlen(argv[3]));
+		stored_cell_info.has_lac = true;
+		LOG_WRN("Cell ID (ci): %s", argv[4]);
+		strncpy(stored_cell_info.ci, argv[4], strlen(argv[4]));
+		stored_cell_info.has_ci = true;
+	}
+}
+
 static void modem_cellular_chat_on_cesq(struct modem_chat *chat, char **argv, uint16_t argc,
 					void *user_data)
 {
@@ -423,6 +453,8 @@ MODEM_CHAT_MATCHES_DEFINE(allow_match,
 MODEM_CHAT_MATCH_DEFINE(imei_match, "", "", modem_cellular_chat_on_imei);
 MODEM_CHAT_MATCH_DEFINE(cgmm_match, "", "", modem_cellular_chat_on_cgmm);
 MODEM_CHAT_MATCH_DEFINE(csq_match, "+CSQ: ", ",", modem_cellular_chat_on_csq);
+MODEM_CHAT_MATCH_DEFINE(cops_match, "+COPS: ", ",", modem_cellular_chat_on_cops);
+MODEM_CHAT_MATCH_DEFINE(creg_match, "+CREG: ", ",", modem_cellular_chat_on_creg);
 MODEM_CHAT_MATCH_DEFINE(cesq_match, "+CESQ: ", ",", modem_cellular_chat_on_cesq);
 MODEM_CHAT_MATCH_DEFINE(cimi_match, "", "", modem_cellular_chat_on_imsi);
 MODEM_CHAT_MATCH_DEFINE(cgmi_match, "", "", modem_cellular_chat_on_cgmi);
@@ -1406,9 +1438,26 @@ static int modem_cellular_get_modem_info(const struct device *dev,
 	return ret;
 }
 
+static int modem_cellular_get_cell_info(const struct device *dev,
+					struct cellular_info *cell_info)
+{
+	int ret = 0;
+	struct modem_cellular_data *data = (struct modem_cellular_data *)dev->data;
+
+	if ((data->state != MODEM_CELLULAR_STATE_AWAIT_REGISTERED) &&
+	    (data->state != MODEM_CELLULAR_STATE_CARRIER_ON)) {
+		return -ENODATA;
+	}
+
+	LOG_WRN("modem_cellular_get_cell_info");
+	memcpy(cell_info, &stored_cell_info, sizeof(struct cellular_info));
+	return ret;
+}
+
 const static struct cellular_driver_api modem_cellular_api = {
 	.get_signal = modem_cellular_get_signal,
 	.get_modem_info = modem_cellular_get_modem_info,
+	.get_cell_info = modem_cellular_get_cell_info,
 };
 
 #ifdef CONFIG_PM_DEVICE
@@ -1553,7 +1602,7 @@ MODEM_CHAT_SCRIPT_CMDS_DEFINE(quectel_bg95_init_chat_script_cmds,
 			      MODEM_CHAT_SCRIPT_CMD_RESP("ATE0", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CFUN=4", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CMEE=1", ok_match),
-			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG=1", ok_match),
+			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG=2", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGREG=1", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CEREG=1", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG?", ok_match),
@@ -1586,7 +1635,8 @@ MODEM_CHAT_SCRIPT_DEFINE(quectel_bg95_dial_chat_script, quectel_bg95_dial_chat_s
 			 dial_abort_matches, modem_cellular_chat_callback_handler, 10);
 
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(quectel_bg95_periodic_chat_script_cmds,
-			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG?", ok_match),
+			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CREG?", creg_match),
+			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+COPS?", cops_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CEREG?", ok_match),
 			      MODEM_CHAT_SCRIPT_CMD_RESP("AT+CGREG?", ok_match));
 
