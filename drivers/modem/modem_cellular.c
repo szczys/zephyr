@@ -358,10 +358,10 @@ static void modem_cellular_chat_on_csq(struct modem_chat *chat, char **argv, uin
 static void modem_cellular_chat_on_cops(struct modem_chat *chat, char **argv, uint16_t argc,
 				        void *user_data)
 {
-	LOG_WRN("on_cops argc: %d", argc);
+	LOG_DBG("on_cops argc: %d", argc);
 	if (argc == 5)
 	{
-		LOG_WRN("Operator: %s", argv[3]);
+		LOG_DBG("Operator: %s", argv[3]);
 		strncpy(stored_cell_info.provider, argv[3], strlen(argv[3]));
 		stored_cell_info.has_provider = true;
 	}
@@ -370,13 +370,13 @@ static void modem_cellular_chat_on_cops(struct modem_chat *chat, char **argv, ui
 static void modem_cellular_chat_on_creg(struct modem_chat *chat, char **argv, uint16_t argc,
 				        void *user_data)
 {
-	LOG_WRN("on_creg argc: %d", argc);
+	LOG_DBG("on_creg argc: %d", argc);
 	if (argc == 6)
 	{
-		LOG_WRN("Location area code (lac): %s", argv[3]);
+		LOG_DBG("Location area code (lac): %s", argv[3]);
 		strncpy(stored_cell_info.lac, argv[3], strlen(argv[3]));
 		stored_cell_info.has_lac = true;
-		LOG_WRN("Cell ID (ci): %s", argv[4]);
+		LOG_DBG("Cell ID (ci): %s", argv[4]);
 		strncpy(stored_cell_info.ci, argv[4], strlen(argv[4]));
 		stored_cell_info.has_ci = true;
 	}
