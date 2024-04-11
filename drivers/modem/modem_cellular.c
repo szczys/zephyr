@@ -1449,7 +1449,6 @@ static int modem_cellular_get_cell_info(const struct device *dev,
 		return -ENODATA;
 	}
 
-	LOG_WRN("modem_cellular_get_cell_info");
 	memcpy(cell_info, &stored_cell_info, sizeof(struct cellular_info));
 	return ret;
 }
