@@ -360,15 +360,15 @@ static void modem_cellular_chat_on_qeng(struct modem_chat *chat, char **argv, ui
 {
 	struct modem_cellular_data *data = (struct modem_cellular_data *)user_data;
 
-	LOG_WRN("on_qeng argc: %d", argc);
+	LOG_DBG("on_qeng argc: %d", argc);
 	if (argc > 13)
 	{
-		if (true)//strcmp(argv[1], "servingcell") == 0)
+		if (strncmp(argv[1], "\"servingcell\"", strlen(argv[1])) == 0)
 		{
-			LOG_WRN("MCC: %s", argv[5]);
-			LOG_WRN("MNC: %s", argv[6]);
-			LOG_WRN("CI: %s", argv[7]);
-			LOG_WRN("LAC: %s", argv[13]);
+			LOG_DBG("MCC: %s", argv[5]);
+			LOG_DBG("MNC: %s", argv[6]);
+			LOG_DBG("CI: %s", argv[7]);
+			LOG_DBG("LAC: %s", argv[13]);
 
 			strncpy(data->tower_info.mcc, argv[5], sizeof(data->tower_info.mcc));
 			data->tower_info.has_mcc = true;
