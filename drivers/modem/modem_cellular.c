@@ -363,21 +363,35 @@ static void modem_cellular_chat_on_qeng(struct modem_chat *chat, char **argv, ui
 	LOG_DBG("on_qeng argc: %d", argc);
 	if (argc > 13)
 	{
-		if (strncmp(argv[1], "\"servingcell\"", strlen(argv[1])) == 0)
+		if (strcmp(argv[1], "\"servingcell\"") == 0)
 		{
-			LOG_DBG("MCC: %s", argv[5]);
-			LOG_DBG("MNC: %s", argv[6]);
-			LOG_DBG("CI: %s", argv[7]);
-			LOG_DBG("LAC: %s", argv[13]);
+			if ((strcmp(argv[3], "\"eMTC\"") == 0) ||
+			    (strcmp(argv[3], "\"NBIoT\"") == 0))
+			{
+				LOG_DBG("MCC: %s", argv[5]);
+				LOG_DBG("MNC: %s", argv[6]);
+				LOG_DBG("CI: %s", argv[7]);
+				LOG_DBG("LAC: %s", argv[13]);
 
-			strncpy(data->tower_info.mcc, argv[5], sizeof(data->tower_info.mcc));
-			data->tower_info.has_mcc = true;
-			strncpy(data->tower_info.mnc, argv[6], sizeof(data->tower_info.mnc));
-			data->tower_info.has_mnc = true;
-			strncpy(data->tower_info.ci, argv[7], sizeof(data->tower_info.ci));
-			data->tower_info.has_ci = true;
-			strncpy(data->tower_info.lac, argv[13], sizeof(data->tower_info.lac));
-			data->tower_info.has_lac = true;
+				strncpy(data->tower_info.mcc, argv[5], sizeof(data->tower_info.mcc));
+				strncpy(data->tower_info.mnc, argv[6], sizeof(data->tower_info.mnc));
+				strncpy(data->tower_info.ci, argv[7], sizeof(data->tower_info.ci));
+				strncpy(data->tower_info.lac, argv[13], sizeof(data->tower_info.lac));
+				data->tower_info.has_data = true;
+			}
+			else if (strncmp(argv[3], "\"GSM\"", strlen(argv[1])) == 0)
+			{
+				LOG_DBG("MCC: %s", argv[4]);
+				LOG_DBG("MNC: %s", argv[5]);
+				LOG_DBG("CI: %s", argv[7]);
+				LOG_DBG("LAC: %s", argv[6]);
+
+				strncpy(data->tower_info.mcc, argv[4], sizeof(data->tower_info.mcc));
+				strncpy(data->tower_info.mnc, argv[5], sizeof(data->tower_info.mnc));
+				strncpy(data->tower_info.ci, argv[7], sizeof(data->tower_info.ci));
+				strncpy(data->tower_info.lac, argv[6], sizeof(data->tower_info.lac));
+				data->tower_info.has_data = true;
+			}
 		}
 	}
 }

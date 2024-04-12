@@ -56,13 +56,10 @@ struct cellular_network {
 /** Cellular network structure */
 struct cellular_info {
 	char mcc[4];
-	bool has_mcc;
 	char mnc[4];
-	bool has_mnc;
 	char lac[5];
-	bool has_lac;
-	char ci[7];
-	bool has_ci;
+	char ci[8];
+	bool has_data;
 };
 
 /** Cellular signal type */
