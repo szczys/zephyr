@@ -55,11 +55,13 @@ struct cellular_network {
 
 /** Cellular network structure */
 struct cellular_info {
-	char provider[17];
-	bool has_provider;
-	char lac[7];
+	char mcc[4];
+	bool has_mcc;
+	char mnc[4];
+	bool has_mnc;
+	char lac[5];
 	bool has_lac;
-	char ci[9];
+	char ci[7];
 	bool has_ci;
 };
 
